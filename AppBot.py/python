@@ -1,0 +1,105 @@
+# B7B-Profile-Private-import asyncio
+import uuid
+import logging
+import os
+
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import Command
+from aiogram.types import Message, LabeledPrice, PreCheckoutQuery
+from aiogram.enums import ParseMode
+
+# =========================
+# НАСТРОЙКИ
+# =========================
+
+BOT_TOKEN = "PASTE_YOUR_BOT_TOKEN_HERE"
+PRICE_STARS = 50000  # 50 000 Telegram Stars
+
+# =========================
+# ЛОГИ
+# =========================
+
+logging.basicConfig(level=logging.INFO)
+
+# =========================
+# ИНИЦИАЛИЗАЦИЯ
+# =========================
+
+bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+dp = Dispatcher()
+
+
+# =========================
+# /start
+# =========================
+
+@dp.message(Command("start"))
+async def start_handler(message: Message):
+    await message.answer(
+        "👋 Привет!\n\n"
+        "Напиши <b>/buy</b>, чтобы купить ⭐️ Telegram Stars.\n\n"
+        "После оплаты звезды поступят на баланс бота."
+    )
+
+
+# =========================
+# /buy — выставляем инвойс
+# =========================
+
+@dp.message(Command("buy"))
+async def buy_handler(message: Message):
+
+    payload = f"order:{uuid.uuid4()}"
+
+    await bot.send_invoice(
+        chat_id=message.chat.id,
+        title="Пополнение Telegram Stars",
+        description="Покупка Telegram Stars для подарков 🎁",
+        payload=payload,
+        currency="XTR",  # Telegram Stars
+        prices=[LabeledPrice(label="Telegram Stars", amount=PRICE_STARS)],
+        provider_token="",  # ОБЯЗАТЕЛЬНО пустая строка для Stars
+        start_parameter="buy_stars",
+    )
+
+
+# =========================
+# Telegram присылает запрос перед оплатой
+# ОБЯЗАТЕЛЬНО подтвердить
+# =========================
+
+@dp.pre_checkout_query()
+async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+
+# =========================
+# После успешной оплаты
+# =========================
+
+@dp.message(F.successful_payment)
+async def successful_payment_handler(message: Message):
+
+    payment = message.successful_payment
+
+    await message.answer(
+        "✅ <b>Оплата прошла успешно!</b>\n\n"
+        f"💰 Сумма: {payment.total_amount} {payment.currency}\n"
+        f"🧾 Payload: {payment.invoice_payload}\n\n"
+        "Теперь ты можешь использовать звезды для покупки подарков 🎁"
+    )
+
+    logging.info(f"Payment received: {payment}")
+
+
+# =========================
+# ЗАПУСК
+# =========================
+
+async def main():
+    print("🚀 Bot started...")
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
