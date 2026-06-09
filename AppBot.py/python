@@ -12,8 +12,8 @@ from aiogram.enums import ParseMode
 # НАСТРОЙКИ
 # =========================
 
-BOT_TOKEN = "PASTE_YOUR_BOT_TOKEN_HERE"
-PRICE_STARS = 50000  # 50 000 Telegram Stars
+BOT_TOKEN = "B7BCompanyBot"
+PRICE_STARS = 500  # 50 000 Telegram Stars
 
 # =========================
 # ЛОГИ
@@ -53,7 +53,7 @@ async def buy_handler(message: Message):
 
     await bot.send_invoice(
         chat_id=message.chat.id,
-        title="Пополнение Telegram Stars",
+        title="Пополнение Telegram Stars",200
         description="Покупка Telegram Stars для подарков 🎁",
         payload=payload,
         currency="XTR",  # Telegram Stars
